@@ -1,0 +1,6 @@
+[submodule "dblp-to-csv"]
+	path = dblp-to-csv
+	url = https://github.com/ThomHurks/dblp-to-csv
+[submodule "submodules/dblp-to-csv"]
+	path = submodules/dblp-to-csv
+	url = https://github.com/ThomHurks/dblp-to-csv
