@@ -1,3 +1,9 @@
 [submodule "submodules/dblp-to-csv"]
 	path = submodules/dblp-to-csv
 	url = https://github.com/ThomHurks/dblp-to-csv
+[submodule "submodules/grobid_client_python"]
+	path = submodules/grobid_client_python
+	url = git@github.com:kermitt2/grobid_client_python.git
+[submodule "submodules/PublicationsRetriever"]
+	path = submodules/PublicationsRetriever
+	url = https://github.com/LSmyrnaios/PublicationsRetriever.git
