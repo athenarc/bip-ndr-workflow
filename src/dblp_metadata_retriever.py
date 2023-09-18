@@ -3,6 +3,7 @@ import json
 import logging
 from pymongo import MongoClient
 from dotenv import load_dotenv
+from datetime import datetime as dt
 
 load_dotenv()
 
@@ -11,19 +12,13 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%d-%m-%Y %H:%M:%S',
     handlers=[
-        logging.FileHandler(os.path.join("..", "logs", f"{os.path.basename(__file__).replace('.py', '.log')}")),
+        logging.FileHandler(os.path.join("logs", f"{os.path.basename(__file__).replace('.py', '.log')}")),
         logging.StreamHandler()
     ]
 )
 
 
 def get_keys():
-    """
-    Retrieves and returns a dictionary containing MongoDB connection keys.
-
-    Returns:
-        dict: Dictionary containing MongoDB connection keys.
-    """
 
     return {
         "mongo_db": os.getenv('MONGO_DB'),
@@ -50,21 +45,32 @@ def connect_to_mongo_collection(db_name, collection_name, ip, username, password
     return collection
 
 
+def create_stats_collection():
+    init_stats = {
+        "key": "statistics",
+        "total_files_checked": 0,
+        "total_refs_checked": 0,
+        "total_refs_skipped": 0,
+        "total_dois_matched": 0,
+        "total_dois_dblp": 0,
+        "total_dblp_keys_matched": 0
+    }
+
+    coll = connect_to_mongo_collection(
+        db_name=get_keys()['mongo_db'],
+        collection_name=f"{get_keys()['stats']}_{dt.today().strftime('%d_%m_%Y')}",
+        ip=get_keys()['mongo_ip'],
+        username=get_keys()['mongo_user'],
+        password=get_keys()['mongo_pass']
+    )
+
+    coll.insert_one(init_stats)
+
+    return coll
+
+
 def lookup_dblp_id(collection, filename):
-    """
-    Looks up the DBLP ID associated with a given filename in a MongoDB collection.
-
-    Args:
-        collection: MongoDB collection to search for the DBLP ID.
-        filename (str): The filename to search for.
-
-    Returns:
-        tuple or None: A tuple containing the DBLP ID and a boolean indicating if the reference file was parsed,
-            or None if the DBLP ID is not found.
-    """
-
-    match_query_regex = {"key": {"$regex": filename.split('.')[0]}}
-    match_query = {"filename": f"{filename.split('.')[0]}.pdf"}
+    match_query = {"key_norm": f"{filename.split('.')[0]}"}
     result_dict = collection.find_one(match_query, collation={'locale': 'en', 'strength': 2})
     if result_dict is not None:
         return result_dict['key'], result_dict['reference_file_parsed']
@@ -77,24 +83,6 @@ def lookup_dblp_id(collection, filename):
 
 
 def lookup_by_doi(collection, pub_doi):
-    """
-    Looks up a publication by its DOI in a MongoDB collection.
-
-    Args:
-        collection: MongoDB collection to search for the publication.
-        pub_doi (str): The DOI of the publication.
-
-    Returns:
-        dict or None: A dictionary containing the publication information if found, or None if not found.
-    """
-
-    match_query_regex = {
-        "ee": {
-            "$regex": pub_doi,
-            '$options': 'i'
-        }
-    }
-
     match_query = {
         'ee': f'https://doi.org/{pub_doi}'
     }
@@ -103,25 +91,7 @@ def lookup_by_doi(collection, pub_doi):
 
 
 def lookup_by_title(collection, pub_title):
-    """
-    Looks up a publication by its title in a MongoDB collection.
-
-    Args:
-        collection: MongoDB collection to search for the publication.
-        pub_title (str): The title of the publication.
-
-    Returns:
-        dict or None: A dictionary containing the publication information if found, or None if not found.
-    """
-
     if pub_title is not None:
-
-        match_query_regex = {
-            "title": {
-                "$regex": pub_title,
-                '$options': 'i'
-            }
-        }
 
         match_query = {
             "title_concat": ''.join(filter(str.isalnum, pub_title))
@@ -134,30 +104,11 @@ def lookup_by_title(collection, pub_title):
 
 
 def parse_biblstruct(collection, bib_entry):
-    """
-    Parses a bibliographic entry and extracts relevant information.
-
-    Args:
-        collection: The collection of bibliographic entries.
-        bib_entry: The bibliographic entry to parse.
-
-    Returns:
-        A tuple containing the parsed information:
-            - bib_entry_dict: A dictionary containing the parsed information:
-                - 'dblp_id': The DBLP key of the publication (if available).
-                - 'doi': The DOI of the publication (if available).
-                - 'doi_url': The URL associated with the DOI (if available).
-                - 'bibliographic_reference': The raw bibliographic reference.
-            - refs_checked: The number of references checked.
-            - refs_skipped: The number of references skipped.
-            - dois_matched: The number of DOIs matched.
-            - dblp_keys_matched: The number of DBLP keys matched.
-
-    """
 
     refs_checked = 0
     refs_skipped = 0
     dois_matched = 0
+    dois_dblp = 0
     dblp_keys_matched = 0
 
     pub_doi = None
@@ -165,6 +116,7 @@ def parse_biblstruct(collection, bib_entry):
     pub_title = None
     raw_reference = None
     doi_url = None
+    doi_dblp = None
 
     bib_entry_dict = []
 
@@ -249,6 +201,11 @@ def parse_biblstruct(collection, bib_entry):
             if result_dict is not None:
                 logging.info("Title Match!")
                 logging.info(f"Matched Title: {result_dict['title']}")
+                doi_dblp = [item for item in result_dict['ee'] if 'doi' in item]
+                if len(doi_dblp) != 0:
+                    doi_dblp = doi_dblp[0].split('.org/')[-1]
+                    logging.info("Retrieved DOI from DBLP")
+                    dois_dblp += 1
                 pub_dblp_key = result_dict['key']
                 dblp_keys_matched += 1
                 logging.info(f"DBLP KEY: {pub_dblp_key}")
@@ -263,43 +220,36 @@ def parse_biblstruct(collection, bib_entry):
         bib_entry_dict = {
             "dblp_id": pub_dblp_key,
             "doi": pub_doi,
-            "doi_url": doi_url,
+            # "doi_url": doi_url,
             "bibliographic_reference": raw_reference
         }
     elif pub_dblp_key and pub_title:
-        bib_entry_dict = {
-            "dblp_id": pub_dblp_key,
-            "bibliographic_reference": raw_reference
-        }
+        if doi_dblp:
+            bib_entry_dict = {
+                "dblp_id": pub_dblp_key,
+                "doi": doi_dblp,
+                "bibliographic_reference": raw_reference
+            }
+        else:
+            bib_entry_dict = {
+                "dblp_id": pub_dblp_key,
+                "bibliographic_reference": raw_reference
+            }
     elif pub_doi and not pub_dblp_key:
         bib_entry_dict = {
             "doi": pub_doi,
             "bibliographic_reference": raw_reference
         }
 
-    return bib_entry_dict, refs_checked, refs_skipped, dois_matched, dblp_keys_matched
+    return bib_entry_dict, refs_checked, refs_skipped, dois_matched, dois_dblp, dblp_keys_matched
 
 
 def get_dblp_meta(collection, json_dict):
-    """
-    Retrieve metadata from a JSON dictionary with bibliographic references.
-
-    Args:
-        collection (str): The name of the collection to search in.
-        json_dict (dict): The JSON dictionary containing bibliographic information.
-
-    Returns:
-        tuple: A tuple containing:
-            - bib_entries (list): A list of parsed bibliographic entries.
-            - bib_refs_checked (int): The total number of references checked.
-            - bib_refs_skipped (int): The total number of references skipped.
-            - bib_dois_matched (int): The total number of DOIs matched.
-            - bib_dblp_keys_matched (int): The total number of DBLP keys matched.
-    """
 
     bib_refs_checked = 0
     bib_refs_skipped = 0
     bib_dois_matched = 0
+    bib_dois_dblp = 0
     bib_dblp_keys_matched = 0
 
     bib_entries = []
@@ -307,114 +257,108 @@ def get_dblp_meta(collection, json_dict):
 
     if type(json_dict['biblStruct']) == list:
         for bib_entry in json_dict["biblStruct"]:
-            bib_entry_dict, refs_checked, refs_skipped, dois_matched, dblp_keys_matched = parse_biblstruct(collection, bib_entry)
+            bib_entry_dict, refs_checked, refs_skipped, dois_matched, dois_dblp, dblp_keys_matched = parse_biblstruct(collection, bib_entry)
             bib_refs_checked += refs_checked
             bib_refs_skipped += refs_skipped
             bib_dois_matched += dois_matched
+            bib_dois_dblp += dois_dblp
             bib_dblp_keys_matched += dblp_keys_matched
             if len(bib_entry_dict) != 0:
                 bib_entries.append(bib_entry_dict)
     elif type(json_dict['biblStruct']) == dict:
         bib_entry = json_dict['biblStruct']
-        bib_entry_dict, refs_checked, refs_skipped, dois_matched, dblp_keys_matched = parse_biblstruct(collection, bib_entry)
+        bib_entry_dict, refs_checked, refs_skipped, dois_matched, dois_dblp, dblp_keys_matched = parse_biblstruct(collection, bib_entry)
         bib_refs_checked += refs_checked
         bib_refs_skipped += refs_skipped
         bib_dois_matched += dois_matched
+        bib_dois_dblp += dois_dblp
         bib_dblp_keys_matched += dblp_keys_matched
         if len(bib_entry_dict) != 0:
             bib_entries.append(bib_entry_dict)
 
-    return bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dblp_keys_matched
+    return bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dois_dblp, bib_dblp_keys_matched
 
 
 def iterate_json_reference_files(inproceedings_collection, dataset_collection, stats_collection, json_filepath, stats):
-    """
-    Iterate over JSON reference files, extract metadata, and update MongoDB collections.
-
-    Args:
-        inproceedings_collection (collection): The collection for inproceedings data.
-        dataset_collection (collection): The collection for dataset data.
-        stats_collection (collection): The collection for statistics data.
-        json_filepath (str): The path to the directory containing JSON files.
-        stats (dict): A dictionary containing statistics.
-
-    Returns:
-        dict: A dictionary containing updated statistics.
-    """
 
     for fl in os.scandir(json_filepath):
 
         bib_refs_checked = 0
         bib_refs_skipped = 0
         bib_dois_matched = 0
+        bib_dois_dblp = 0
         bib_dblp_keys_matched = 0
 
-        if fl.is_file():
-            bib_entries = []
+        try:
+            if fl.is_file():
+                bib_entries = []
 
-            dblp_id, file_checked = lookup_dblp_id(inproceedings_collection, fl.name)
+                dblp_id, file_checked = lookup_dblp_id(inproceedings_collection, fl.name)
 
-            if dblp_id is not None:
-                if file_checked is False:
-                    logging.info("")
-                    logging.info(f'Checking file with dblp_id: {dblp_id}')
-                    with open(fl, "r", encoding="utf-8") as json_file:
-                        json_dict = json.load(json_file)
-                        bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dblp_keys_matched = get_dblp_meta(inproceedings_collection, json_dict)
+                if dblp_id is not None:
+                    if file_checked is False:
+                        logging.info("")
+                        logging.info(f'Checking file with dblp_id: {dblp_id}')
+                        with open(fl, "r", encoding="utf-8") as json_file:
+                            json_dict = json.load(json_file)
+                            bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dois_dblp, bib_dblp_keys_matched = get_dblp_meta(inproceedings_collection, json_dict)
 
-                    dblp_entry_dict = {
-                        "citing_paper": {
-                            "dblp_id": dblp_id,
-                        },
-                        "cited_papers": bib_entries
-                    }
-
-                    stats['total_files_checked'] += 1
-                    stats['total_refs_checked'] += bib_refs_checked
-                    stats['total_refs_skipped'] += bib_refs_skipped
-                    stats['total_dois_matched'] += bib_dois_matched
-                    stats['total_dblp_keys_matched'] += bib_dblp_keys_matched
-
-                    logging.info("")
-                    logging.info("---------------------")
-                    logging.info(f'Refs checked: {bib_refs_checked}')
-                    logging.info(f'Refs skipped: {bib_refs_skipped}')
-                    logging.info(f'DOIs matched: {bib_dois_matched}')
-                    logging.info(f'DBLP keys matched: {bib_dblp_keys_matched}')
-                    logging.info("---------------------")
-
-                    inproceedings_collection.update_one(
-                        {"key": dblp_id},
-                        {"$set": {"reference_file_parsed": True}},
-                        collation={'locale': 'en', 'strength': 2}
-                    )
-                    dataset_collection.insert_one(dblp_entry_dict)
-
-                    stats_collection.update_one(
-                        {"key": "statistics"},
-                        {
-                            "$set": {
-                                "total_files_checked": stats["total_files_checked"],
-                                "total_refs_checked": stats["total_refs_checked"],
-                                "total_refs_skipped": stats["total_refs_skipped"],
-                                "total_dois_matched": stats["total_dois_matched"],
-                                "total_dblp_keys_matched": stats["total_dblp_keys_matched"]
-                            }
+                        dblp_entry_dict = {
+                            "citing_paper": {
+                                "dblp_id": dblp_id,
+                            },
+                            "cited_papers": bib_entries
                         }
-                    )
+
+                        stats['total_files_checked'] += 1
+                        stats['total_refs_checked'] += bib_refs_checked
+                        stats['total_refs_skipped'] += bib_refs_skipped
+                        stats['total_dois_matched'] += bib_dois_matched
+                        stats['total_dois_dblp'] += bib_dois_dblp
+                        stats['total_dblp_keys_matched'] += bib_dblp_keys_matched
+
+                        logging.info("")
+                        logging.info("---------------------")
+                        logging.info(f'Refs checked: {bib_refs_checked}')
+                        logging.info(f'Refs skipped: {bib_refs_skipped}')
+                        logging.info(f'DOIs matched: {bib_dois_matched}')
+                        logging.info(f'DOI retrieved from DBLP: {bib_dois_dblp}')
+                        logging.info(f'DBLP keys matched: {bib_dblp_keys_matched}')
+                        logging.info("---------------------")
+
+                        inproceedings_collection.update_one(
+                            {"key": dblp_id},
+                            {"$set": {"reference_file_parsed": True}},
+                            collation={'locale': 'en', 'strength': 2}
+                        )
+                        dataset_collection.insert_one(dblp_entry_dict)
+
+                        stats_collection.update_one(
+                            {"key": "statistics"},
+                            {
+                                "$set": {
+                                    "total_files_checked": stats["total_files_checked"],
+                                    "total_refs_checked": stats["total_refs_checked"],
+                                    "total_refs_skipped": stats["total_refs_skipped"],
+                                    "total_dois_matched": stats["total_dois_matched"],
+                                    "total_dois_dblp": stats["total_dois_dblp"],
+                                    "total_dblp_keys_matched": stats["total_dblp_keys_matched"]
+                                }
+                            }
+                        )
+        except Exception as e:
+            print(e)
+            pass
 
     return stats
 
 
 def main():
-    """
-    Entry point for the program. Processes JSON reference files and logs processing results.
+    # json_filepath = os.path.join(os.sep, "data", "dblp_corpus", "full_corpus", "json_references")
+    json_filepath = os.path.join(os.sep, "home", "pkoloveas", "Desktop", "dblp_corpus", "full_corpus", "json_references")
+    # json_filepath = os.path.join("data")
 
-    Returns:
-        None
-    """
-
-    json_filepath = os.path.join("..", "data", "json_References")  # path to the folder containing the json bib files - Default: json_references
+    # dblp_dataset = []
 
     inproceedings_collection = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
@@ -426,19 +370,13 @@ def main():
 
     dblp_dataset_collection = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
-        collection_name=get_keys()['dblp_dataset'],
+        collection_name=f"{get_keys()['dblp_dataset']}_{dt.today().strftime('%d_%m_%Y')}",
         ip=get_keys()['mongo_ip'],
         username=get_keys()['mongo_user'],
         password=get_keys()['mongo_pass']
     )
 
-    stats_collection = connect_to_mongo_collection(
-        db_name=get_keys()['mongo_db'],
-        collection_name=get_keys()['stats'],
-        ip=get_keys()['mongo_ip'],
-        username=get_keys()['mongo_user'],
-        password=get_keys()['mongo_pass']
-    )
+    stats_collection = create_stats_collection()
 
     stats = stats_collection.find()[0]
     # print(stats[0])
@@ -446,6 +384,7 @@ def main():
     stats["total_refs_checked"] = int(stats["total_refs_checked"])
     stats["total_refs_skipped"] = int(stats["total_refs_skipped"])
     stats["total_dois_matched"] = int(stats["total_dois_matched"])
+    stats["total_dois_dblp"] = int(stats["total_dois_dblp"])
     stats["total_dblp_keys_matched"] = int(stats["total_dblp_keys_matched"])
 
     logging.info("----------------------------Starting up----------------------------")
@@ -456,6 +395,7 @@ def main():
     logging.info(f'Total Refs checked: {stats["total_refs_checked"]}')
     logging.info(f'Total Refs skipped: {stats["total_refs_skipped"]}')
     logging.info(f'Total DOIs matched: {stats["total_dois_matched"]}')
+    logging.info(f'Total DOIs retrieved from DBLP: {stats["total_dois_dblp"]}')
     logging.info(f'Total DBLP keys matched: {stats["total_dblp_keys_matched"]}')
 
 

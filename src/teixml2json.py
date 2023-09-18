@@ -103,13 +103,18 @@ def batch_convert_files(in_path, out_path):
     default=json_refs_path,
     help="The path to the directory where the JSON files will be saved."
 )
-def main(ctx, in_path, out_path):
+@click.option(
+    '--yes', 
+    is_flag=True
+)
+def main(ctx, in_path, out_path, yes):
     """
     Converts TEI XML files containing bibliographic references to JSON files.
 
     :param ctx: The Click context.
     :param in_path: The path to the directory containing the TEI XML files.
     :param out_path: The path to the directory where the output JSON files will be saved.
+    :param yes: Flag to auro create output directory if it does not exist.
     :return: None
     """
 
@@ -140,11 +145,15 @@ def main(ctx, in_path, out_path):
             else:
                 # Check if the output folder exists, and create it if not
                 if not os.path.exists(out_path):
-                    if click.confirm(f"The folder \"{out_path}\" does not exist. Do you want to create it?"):
+                    if not yes:
+                        if click.confirm(f"The folder \"{out_path}\" does not exist. Do you want to create it?"):
+                            os.makedirs(out_path)
+                            click.echo(f"Successfully created \"{out_path}\" folder.")
+                        else:
+                            exit(1)
+                    else:
                         os.makedirs(out_path)
                         click.echo(f"Successfully created \"{out_path}\" folder.")
-                    else:
-                        exit(1)
 
                 # Process the files in the input folder
                 batch_convert_files(in_path, out_path)

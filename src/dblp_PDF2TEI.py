@@ -1,18 +1,8 @@
 from submodules.grobid_client_python.grobid_client.grobid_client import GrobidClient
 import os
 import sys
-# import logging
-
-# logging.basicConfig(
-#     format='%(asctime)s \t %(message)s',
-#     level=logging.INFO,
-#     datefmt='%d-%m-%Y %H:%M:%S',
-#     handlers=[
-#         logging.FileHandler(os.path.join("logs", f"{os.path.basename(__file__).replace('.py', '.log')}")),
-#         logging.StreamHandler()
-#     ]
-# )
-
+import ctypes
+libgcc_s = ctypes.CDLL('libgcc_s.so.1')
 config_path = os.path.join("..", "submodules", "grobid_client_python", "config.json")
 pdf_path = os.path.join("..", "data", "PDFs")
 tei_path = os.path.join("..", "data", "TEI_XML")
@@ -27,8 +17,6 @@ if __name__ == "__main__":
         folder_name = sys.argv[2]
 
     if service == 0:  # processFulltextDocument
-        # logging.info(service_options[0])
-        # print(service_options[0])
         tei_path = os.path.join(tei_path, "FullText")
         if not os.path.exists(tei_path):
             os.makedirs(tei_path)
@@ -45,10 +33,9 @@ if __name__ == "__main__":
             output=tei_path,
             consolidate_citations=True,
             force=False,
-            verbose=True)
+            verbose=True,
+            n=10)
     elif service == 1:  # processReferences
-        # logging.info(service_options[1])
-        # print(service_options[1])
         tei_path = os.path.join(tei_path, "References")
         if not os.path.exists(tei_path):
             os.makedirs(tei_path)
@@ -66,10 +53,9 @@ if __name__ == "__main__":
             consolidate_citations=1,
             include_raw_citations=True,
             force=False,
-            verbose=True)
+            verbose=True,
+            n=10)
     elif service == 2:  # processHeader
-        # logging.info(service_options[2])
-        # print(service_options[2])
         tei_path = os.path.join(tei_path, "Headers")
         if not os.path.exists(tei_path):
             os.makedirs(tei_path)
@@ -87,10 +73,9 @@ if __name__ == "__main__":
             consolidate_header=1,
             include_raw_affiliations=1,
             force=False,
-            verbose=True)
+            verbose=True,
+            n=10)
     elif service == 3:  # processFulltextDocument
-        # logging.info(service_options[0])
-        # print(service_options[0])
         tei_path = os.path.join(tei_path, "FullTextSegmented")
         if not os.path.exists(tei_path):
             os.makedirs(tei_path)
@@ -108,4 +93,5 @@ if __name__ == "__main__":
             consolidate_citations=True,
             force=False,
             verbose=True,
-            segment_sentences=True)
+            segment_sentences=True,
+            n=10)
