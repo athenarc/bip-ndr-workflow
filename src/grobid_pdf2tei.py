@@ -1,11 +1,14 @@
-from submodules.grobid_client_python.grobid_client.grobid_client import GrobidClient
-import os
-import sys
 import ctypes
+from src.utils import *
+from submodules.grobid_client_python.grobid_client.grobid_client import GrobidClient
 libgcc_s = ctypes.CDLL('libgcc_s.so.1')
-config_path = os.path.join("..", "submodules", "grobid_client_python", "config.json")
-pdf_path = os.path.join("..", "data", "PDFs")
-tei_path = os.path.join("..", "data", "TEI_XML")
+
+# config_path = os.path.join("..", "submodules", "grobid_client_python", "config.json")
+# pdf_path = os.path.join("..", "data", "PDFs")
+# tei_path = os.path.join("..", "data", "TEI_XML")
+config_path = get_keys()['grobid_config_path']
+pdf_path = get_keys()['pdf_path']
+tei_path = get_keys()['tei_path']
 
 service_options = ["processFulltextDocument", "processReferences", "processHeaderDocument"]
 

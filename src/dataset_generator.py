@@ -1,11 +1,5 @@
-import os
-import json
-import logging
-from pymongo import MongoClient
-from dotenv import load_dotenv
-from datetime import datetime as dt
+from src.utils import *
 
-load_dotenv()
 
 logging.basicConfig(
     format='%(asctime)s \t %(message)s',
@@ -16,33 +10,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-
-def get_keys():
-
-    return {
-        "mongo_db": os.getenv('MONGO_DB'),
-        "mongo_coll": os.getenv('MONGO_COL'),
-        "dblp_dataset": os.getenv('DBLP_DATASET'),
-        "stats": os.getenv('STATS_COLLECTION'),
-        "mongo_ip": os.getenv('MONGO_IP'),
-        "mongo_user": os.getenv('MONGO_USER'),
-        "mongo_pass": os.getenv('MONGO_PASS')
-    }
-
-
-def connect_to_mongo_collection(db_name, collection_name, ip, username, password):
-    """Connects to mongoDB collection"""
-
-    client = MongoClient(
-        host=ip,
-        username=username,
-        password=password
-    )
-    db = client[db_name]
-    collection = db[collection_name]
-
-    return collection
 
 
 def create_stats_collection():
@@ -220,7 +187,6 @@ def parse_biblstruct(collection, bib_entry):
         bib_entry_dict = {
             "dblp_id": pub_dblp_key,
             "doi": pub_doi,
-            # "doi_url": doi_url,
             "bibliographic_reference": raw_reference
         }
     elif pub_dblp_key and pub_title:
@@ -279,9 +245,9 @@ def get_dblp_meta(collection, json_dict):
     return bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dois_dblp, bib_dblp_keys_matched
 
 
-def iterate_json_reference_files(inproceedings_collection, dataset_collection, stats_collection, json_filepath, stats):
+def iterate_json_reference_files(inproceedings_collection, dataset_collection, stats_collection, json_path, stats):
 
-    for fl in os.scandir(json_filepath):
+    for fl in os.scandir(json_path):
 
         bib_refs_checked = 0
         bib_refs_skipped = 0
@@ -354,9 +320,12 @@ def iterate_json_reference_files(inproceedings_collection, dataset_collection, s
 
 
 def main():
-    # json_filepath = os.path.join(os.sep, "data", "dblp_corpus", "full_corpus", "json_references")
-    json_filepath = os.path.join(os.sep, "home", "pkoloveas", "Desktop", "dblp_corpus", "full_corpus", "json_references")
-    # json_filepath = os.path.join("data")
+    load_dotenv()
+
+    # json_path = os.path.join(os.sep, "data", "dblp_corpus", "full_corpus", "json_references")
+    # json_path = os.path.join(os.sep, "home", "pkoloveas", "Desktop", "dblp_corpus", "full_corpus", "json_references")
+    # json_path = os.path.join("data")
+    json_path = get_keys()['json_path']
 
     # dblp_dataset = []
 
@@ -388,7 +357,7 @@ def main():
     stats["total_dblp_keys_matched"] = int(stats["total_dblp_keys_matched"])
 
     logging.info("----------------------------Starting up----------------------------")
-    stats = iterate_json_reference_files(inproceedings_collection, dblp_dataset_collection, stats_collection, json_filepath, stats)
+    stats = iterate_json_reference_files(inproceedings_collection, dblp_dataset_collection, stats_collection, json_path, stats)
 
     logging.info('')
     logging.info(f'Total Files checked: {stats["total_files_checked"]}')
