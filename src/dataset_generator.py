@@ -347,7 +347,7 @@ def main():
 
     stats_collection = create_stats_collection()
 
-    stats = stats_collection.find()[0]
+    stats = stats_collection.find({"key": "statistics"})[0]
     # print(stats[0])
     stats["total_files_checked"] = int(stats["total_files_checked"])
     stats["total_refs_checked"] = int(stats["total_refs_checked"])

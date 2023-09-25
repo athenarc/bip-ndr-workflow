@@ -3,6 +3,7 @@ import re
 import click
 from utils import *
 
+load_dotenv()
 
 # tei_path = os.path.join("..", "data", "TEI_XML")  # Path to the directory containing the TEI XML files
 # json_path = os.path.join("..", "data", "JSON_References")  # Path to the directory where the JSON files will be saved
