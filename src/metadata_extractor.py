@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
-from src.utils import *
+import re
+import jsonlines
+from utils import *
 
 
 logging.basicConfig(
@@ -13,7 +15,34 @@ logging.basicConfig(
     ]
 )
 
-# TODO: add create_downloadl_object() function
+
+def create_download_object(pub_retriever_path, latest_date):
+
+    logging.info("----------------------------Starting up Download Object Generator----------------------------")
+    match_query = {
+        "$and": [
+            {"ee-type": "oa"},
+            {"import_date": latest_date},
+            {"ee": {"$not": {"$regex": "doi"}}}]
+    }
+    json_data = []
+    for doc in collection.find(match_query, collation={'locale': 'en', 'strength': 2}):
+
+        id_value = doc['key_norm']
+        json_entry = {
+            'id': id_value,
+            'url': doc['ee'][0]
+        }
+        json_data.append(json_entry)
+
+        filepath = os.path.join(pub_retriever_path, "DBLP", f"dblp-{latest_date}")
+        if not os.path.exists(os.path.join(filepath, "input")):
+            os.makedirs(os.path.join(filepath, "input"))
+        if not os.path.exists(os.path.join(filepath, "output")):
+            os.makedirs(os.path.join(filepath, "output"))
+
+    with jsonlines.open(os.path.join(filepath, "input", "input_urls.jsonl"), mode="w") as writer:
+        writer.write_all(json_data)
 
 
 def match_key_to_filename(pdf_path):
@@ -36,12 +65,15 @@ def import_to_mongo(input_dblp_file):
 
     logging.info("----------------------------Starting up Mongo Importer----------------------------")
     for document in document_generator(input_dblp_file):
-        try:
-            with timeout(2):
-                collection.insert_one(document)
-                logging.info(f'Successfully inserted document with ID: {document["id"]}')
-        except Exception as e:
-            logging.info(f'Insertion of document {document["id"]} failed. Error message: {e}')
+        if collection.find_one({"key": document['key']}, collation={'locale': 'en', 'strength': 2}):
+            logging.info(f"Document with key: {document['key']} already exists in collection. Skipping...")
+        else:
+            try:
+                with timeout(2):
+                    collection.insert_one(document)
+                    logging.info(f"Successfully inserted document with key: {document['key']}")
+            except Exception as e:
+                logging.info(f"Insertion of document with key: {document['key']} failed. Error message: {e}")
 
 
 def split_concat_cells(df, concat_values):
@@ -53,24 +85,32 @@ def split_concat_cells(df, concat_values):
 
 
 def document_generator(df):
-    for record in df.to_dict('records'):
-        yield record
+    for doc in df.to_dict('records'):
+        doc['title_concat'] = re.sub(r'\W+', '', doc['title'])
+        doc['key_norm'] = doc['key'].replace("/", "_")
+        # doc['filename_norm'] = f"{doc['key_norm']}.pdf"
+        doc['PDF_downloaded'] = False
+        doc['reference_file_parsed'] = False
+        doc['import_date'] = get_keys()['latest_date']
+        # print(doc)
+        yield doc
 
 
 if __name__ == "__main__":
     load_dotenv()
 
-    # pdf_path = os.path.join("..", "data", "PDFs")
+    latest_date = get_keys()['latest_date']
     pdf_path = get_keys()['pdf_path']
-
-    # article_fl = sys.argv[1]
-    # corpus_files = ["full_corpus_inproceedings.csv", "head_inproceedings.csv", "sm_head_inproceedings.csv", "full_corpus_article.csv"]
-    # corpus_path = os.path.join(os.sep, "data", "DBLP_corpus", "csv_split_by_type", "articles_csv", f"full_corpus_article_split_{article_fl}.csv")
-    corpus_path = get_keys()['corpus_path']
+    pub_retriever_path = get_keys()['pub_retriever_path']
+    corpus_path = os.path.join(get_keys()['corpus_path'], f"dblp-{latest_date}")
+    csv_files = [
+        f"dblp_{latest_date}_inproceedings.csv",
+        f"dblp_{latest_date}_article.csv"
+    ]
 
     collection = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
-        collection_name=get_keys()['mongo_coll'],
+        collection_name=get_keys()['papers_coll'],
         ip=get_keys()['mongo_ip'],
         username=get_keys()['mongo_user'],
         password=get_keys()['mongo_pass']
@@ -78,12 +118,11 @@ if __name__ == "__main__":
 
     concat_values = ['author', 'author-orcid', 'cite', 'cite-label', 'ee', 'ee-type']
 
-    input_dblp_file = pd.read_csv(corpus_path, sep=";", low_memory=False)
-    input_dblp_file = split_concat_cells(input_dblp_file, concat_values).replace(np.nan, '', regex=True)
-    # input_dblp_file = input_dblp_file.replace(np.nan, '', regex=True)
+    create_download_object(pub_retriever_path, latest_date)
 
-    # mongo shell title_concat:
-    # db.manuscript_metadata.find().forEach(function(doc) { doc.title_concat = doc.title.replace(/[^A-Za-z0-9]/g, '');db.manuscript_metadata.save(doc) });
+    # for input_file in csv_files:
+    #     input_dblp_file = pd.read_csv(os.path.join(corpus_path, input_file), sep=";", low_memory=False)
+    #     input_dblp_file = split_concat_cells(input_dblp_file, concat_values).replace(np.nan, '', regex=True)
+    #     # input_dblp_file = input_dblp_file.replace(np.nan, '', regex=True)
 
-    import_to_mongo(input_dblp_file)
-    match_key_to_filename(pdf_path)
+    #     import_to_mongo(input_dblp_file)

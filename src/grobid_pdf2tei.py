@@ -1,18 +1,26 @@
 import ctypes
-from src.utils import *
-from submodules.grobid_client_python.grobid_client.grobid_client import GrobidClient
+from utils import *
 libgcc_s = ctypes.CDLL('libgcc_s.so.1')
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from submodules.grobid_client_python.grobid_client.grobid_client import GrobidClient
 
-# config_path = os.path.join("..", "submodules", "grobid_client_python", "config.json")
-# pdf_path = os.path.join("..", "data", "PDFs")
-# tei_path = os.path.join("..", "data", "TEI_XML")
-config_path = get_keys()['grobid_config_path']
-pdf_path = get_keys()['pdf_path']
-tei_path = get_keys()['tei_path']
-
-service_options = ["processFulltextDocument", "processReferences", "processHeaderDocument"]
 
 if __name__ == "__main__":
+    load_dotenv()
+
+    # config_path = os.path.join("submodules", "grobid_client_python", "config.json")
+    # pdf_path = os.path.join("..", "data", "PDFs")
+    # tei_path = os.path.join("..", "data", "TEI_XML")
+    config_path = get_keys()['grobid_config_path']
+    pdf_path = get_keys()['pdf_path']
+    tei_path = get_keys()['tei_path']
+
+    # print(config_path)
+    # print(pdf_path)
+    # print(tei_path)
+
+    service_options = ["processFulltextDocument", "processReferences", "processHeaderDocument"]
+
     client = GrobidClient(config_path=config_path)
     service = int(sys.argv[1])
 

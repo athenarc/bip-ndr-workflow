@@ -1,7 +1,7 @@
 import xmltodict
 import re
 import click
-from src.utils import *
+from utils import *
 
 
 # tei_path = os.path.join("..", "data", "TEI_XML")  # Path to the directory containing the TEI XML files

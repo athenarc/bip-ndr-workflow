@@ -1,4 +1,4 @@
-from src.utils import *
+from utils import *
 
 
 logging.basicConfig(
@@ -25,7 +25,7 @@ def create_stats_collection():
 
     coll = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
-        collection_name=f"{get_keys()['stats']}_{dt.today().strftime('%d_%m_%Y')}",
+        collection_name=f"{get_keys()['stats']}_{dt.today().strftime('%d-%m-%Y')}",
         ip=get_keys()['mongo_ip'],
         username=get_keys()['mongo_user'],
         password=get_keys()['mongo_pass']
@@ -245,7 +245,7 @@ def get_dblp_meta(collection, json_dict):
     return bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dois_dblp, bib_dblp_keys_matched
 
 
-def iterate_json_reference_files(inproceedings_collection, dataset_collection, stats_collection, json_path, stats):
+def iterate_json_reference_files(papers_collection, dataset_collection, stats_collection, json_path, stats):
 
     for fl in os.scandir(json_path):
 
@@ -259,7 +259,7 @@ def iterate_json_reference_files(inproceedings_collection, dataset_collection, s
             if fl.is_file():
                 bib_entries = []
 
-                dblp_id, file_checked = lookup_dblp_id(inproceedings_collection, fl.name)
+                dblp_id, file_checked = lookup_dblp_id(papers_collection, fl.name)
 
                 if dblp_id is not None:
                     if file_checked is False:
@@ -267,7 +267,7 @@ def iterate_json_reference_files(inproceedings_collection, dataset_collection, s
                         logging.info(f'Checking file with dblp_id: {dblp_id}')
                         with open(fl, "r", encoding="utf-8") as json_file:
                             json_dict = json.load(json_file)
-                            bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dois_dblp, bib_dblp_keys_matched = get_dblp_meta(inproceedings_collection, json_dict)
+                            bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dois_dblp, bib_dblp_keys_matched = get_dblp_meta(papers_collection, json_dict)
 
                         dblp_entry_dict = {
                             "citing_paper": {
@@ -292,7 +292,7 @@ def iterate_json_reference_files(inproceedings_collection, dataset_collection, s
                         logging.info(f'DBLP keys matched: {bib_dblp_keys_matched}')
                         logging.info("---------------------")
 
-                        inproceedings_collection.update_one(
+                        papers_collection.update_one(
                             {"key": dblp_id},
                             {"$set": {"reference_file_parsed": True}},
                             collation={'locale': 'en', 'strength': 2}
@@ -329,9 +329,9 @@ def main():
 
     # dblp_dataset = []
 
-    inproceedings_collection = connect_to_mongo_collection(
+    papers_collection = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
-        collection_name=get_keys()['mongo_coll'],
+        collection_name=get_keys()['papers_coll'],
         ip=get_keys()['mongo_ip'],
         username=get_keys()['mongo_user'],
         password=get_keys()['mongo_pass']
@@ -339,7 +339,7 @@ def main():
 
     dblp_dataset_collection = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
-        collection_name=f"{get_keys()['dblp_dataset']}_{dt.today().strftime('%d_%m_%Y')}",
+        collection_name=f"{get_keys()['dblp_dataset']}_{dt.today().strftime('%d-%m-%Y')}",
         ip=get_keys()['mongo_ip'],
         username=get_keys()['mongo_user'],
         password=get_keys()['mongo_pass']
@@ -357,7 +357,7 @@ def main():
     stats["total_dblp_keys_matched"] = int(stats["total_dblp_keys_matched"])
 
     logging.info("----------------------------Starting up----------------------------")
-    stats = iterate_json_reference_files(inproceedings_collection, dblp_dataset_collection, stats_collection, json_path, stats)
+    stats = iterate_json_reference_files(papers_collection, dblp_dataset_collection, stats_collection, json_path, stats)
 
     logging.info('')
     logging.info(f'Total Files checked: {stats["total_files_checked"]}')
