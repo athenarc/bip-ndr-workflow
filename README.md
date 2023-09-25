@@ -6,7 +6,7 @@
 
 ## README - Workflow TBD
 
-To download with the submodules run:
+To clone with the submodules run:
 
 ```bash
 git clone --recurse-submodules -j8 git@github.com:athenarc/bip-ndr-workflow.git
