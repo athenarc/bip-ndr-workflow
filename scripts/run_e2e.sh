@@ -29,4 +29,5 @@ python3 ./submodules/dblp-to-csv/XMLToCSV.py ${DBLP_CORPUS_PATH}dblp-${LATEST_DA
 
 # python3 ./src/dataset_generator.py
 
-# mongoexport mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_IP}:27017/?authSource=admin --db=${MONGO_DB} --collection=${DBLP_DATASET}_$(date +%F) --out=${DBLP_DATASET}.jsonl
+# ./run_mongoexport.sh
+
