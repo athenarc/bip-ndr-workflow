@@ -36,6 +36,14 @@ def create_stats_collection():
     return coll
 
 
+def reset_papers_collection(papers_collection):
+    papers_collection.update_one(
+        {"reference_file_parsed": True},
+        {"$set": {"reference_file_parsed": False}},
+        collation={'locale': 'en', 'strength': 2}
+    )
+
+
 def lookup_dblp_id(collection, filename):
     match_query = {"key_norm": f"{filename.split('.')[0]}"}
     result_dict = collection.find_one(match_query, collation={'locale': 'en', 'strength': 2})
@@ -355,6 +363,8 @@ def main():
     stats["total_dois_matched"] = int(stats["total_dois_matched"])
     stats["total_dois_dblp"] = int(stats["total_dois_dblp"])
     stats["total_dblp_keys_matched"] = int(stats["total_dblp_keys_matched"])
+
+    reset_papers_collection(papers_collection)
 
     logging.info("----------------------------Starting up----------------------------")
     stats = iterate_json_reference_files(papers_collection, dblp_dataset_collection, stats_collection, json_path, stats)

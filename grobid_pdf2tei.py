@@ -1,7 +1,7 @@
 import ctypes
 from utils import *
 libgcc_s = ctypes.CDLL('libgcc_s.so.1')
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from submodules.grobid_client_python.grobid_client.grobid_client import GrobidClient
 
 
@@ -15,9 +15,9 @@ if __name__ == "__main__":
     pdf_path = get_keys()['pdf_path']
     tei_path = get_keys()['tei_path']
 
-    # print(config_path)
-    # print(pdf_path)
-    # print(tei_path)
+    print(config_path)
+    print(pdf_path)
+    print(tei_path)
 
     service_options = ["processFulltextDocument", "processReferences", "processHeaderDocument"]
 

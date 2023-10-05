@@ -118,7 +118,8 @@ if __name__ == "__main__":
 
     concat_values = ['author', 'author-orcid', 'cite', 'cite-label', 'ee', 'ee-type']
 
-    create_download_object(pub_retriever_path, latest_date)
+    # create_download_object(pub_retriever_path, latest_date)
+    match_key_to_filename(pdf_path)
 
     # for input_file in csv_files:
     #     input_dblp_file = pd.read_csv(os.path.join(corpus_path, input_file), sep=";", low_memory=False)

@@ -162,6 +162,9 @@ cython_debug/
 # MacOS
 .DS_Store
 
+# config
+.vscode/
+
 # data folder
 data/
 output_dataset/
