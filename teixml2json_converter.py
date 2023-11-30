@@ -30,7 +30,8 @@ def get_jsonfilename(fl, json_path, complete_path):
     :param fl: A file object representing the input TEI XML file.
     :param json_path: The path to the directory where the JSON files will be saved.
     :param complete_path: A boolean value indicating whether to return the complete path to the output file.
-    "return: The name of the output JSON file (either with or without the full path).
+
+    :return: The name of the output JSON file (either with or without the full path).
     """
     if complete_path is True:
         return os.path.join(json_path, fl.name.replace('.tei.xml', '.json'))
@@ -43,6 +44,7 @@ def fix_formatting(json_data):
     Fixes formatting errors such as multiple whitespaces, newline characters and hyphenation errors.
 
     :param json_data: The JSON string to be formatted.
+
     :return: The formatted JSON string.
     """
     json_data = re.sub(r'\s{2,}', ' ', json_data)
@@ -59,6 +61,7 @@ def convert_xml2json(xml_file, fl, json_path):
     :param xml_file: A file object representing the input TEI XML file.
     :param fl: A file object representing the output JSON file.
     :param json_path: The path to the directory where the JSON files will be saved.
+
     :return: None
     """
     data_dict = xmltodict.parse(xml_file.read())
@@ -76,6 +79,7 @@ def batch_convert_files(in_path, out_path):
 
     :param in_path: The path to the directory containing the input TEI XML files.
     :param out_path: The path to the directory where the JSON files will be saved.
+
     :return: None
     """
     for fl in os.scandir(in_path):
@@ -119,6 +123,7 @@ def main(ctx, in_path, out_path, yes):
     :param in_path: The path to the directory containing the TEI XML files.
     :param out_path: The path to the directory where the output JSON files will be saved.
     :param yes: Flag to auro create output directory if it does not exist.
+
     :return: None
     """
 

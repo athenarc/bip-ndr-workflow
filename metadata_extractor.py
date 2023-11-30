@@ -17,7 +17,14 @@ logging.basicConfig(
 
 
 def create_download_object(pub_retriever_path, latest_date):
+    """
+    Generates a download object and saves it to a JSON file.
 
+    :param pub_retriever_path: Path to the publication retriever directory.
+    :param latest_date: The latest date for which the download object is created.
+
+    :return: None
+    """
     logging.info("----------------------------Starting up Download Object Generator----------------------------")
     match_query = {
         "$and": [
@@ -46,7 +53,13 @@ def create_download_object(pub_retriever_path, latest_date):
 
 
 def match_key_to_filename(pdf_path):
+    """
+    Matches DBLP keys to filenames for downloaded PDFs.
 
+    :param pdf_path: Path to the directory containing PDF files.
+
+    :return: None
+    """
     logging.info("----------------------------Starting up Key to Filename Matching----------------------------")
     for fl in os.scandir(pdf_path):
         if fl.is_file() and fl.name.endswith(".pdf"):
@@ -62,6 +75,13 @@ def match_key_to_filename(pdf_path):
 
 
 def import_to_mongo(input_dblp_file):
+    """
+    Imports data from a CSV file to a MongoDB collection.
+
+    :param input_dblp_file: DataFrame containing CSV file data.
+
+    :return: None
+    """
 
     logging.info("----------------------------Starting up Mongo Importer----------------------------")
     for document in document_generator(input_dblp_file):
@@ -77,6 +97,14 @@ def import_to_mongo(input_dblp_file):
 
 
 def split_concat_cells(df, concat_values):
+    """
+    Splits concatenated cell values in a DataFrame.
+
+    :param df: The DataFrame to process.
+    :param concat_values: List of column names with concatenated values.
+
+    :return: DataFrame with split values.
+    """
     for value in concat_values:
         has_nan = df[value].isna()
         if df[value].notna().any():
@@ -85,6 +113,13 @@ def split_concat_cells(df, concat_values):
 
 
 def document_generator(df):
+    """
+    Generates documents for insertion into MongoDB from a DataFrame.
+
+    :param df: The DataFrame to process.
+
+    :yield: Document dictionary for insertion into MongoDB.
+    """
     for doc in df.to_dict('records'):
         doc['title_concat'] = re.sub(r'\W+', '', doc['title'])
         doc['key_norm'] = doc['key'].replace("/", "_")

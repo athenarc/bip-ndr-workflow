@@ -13,6 +13,12 @@ logging.basicConfig(
 
 
 def create_stats_collection():
+    """
+    Creates and initializes a MongoDB collection for storing statistics.
+
+    :return: MongoDB collection object for storing statistics.
+    """
+
     init_stats = {
         "key": "statistics",
         "total_files_checked": 0,
@@ -37,6 +43,12 @@ def create_stats_collection():
 
 
 def reset_papers_collection(papers_collection):
+    """
+    Resets the `reference_file_parsed` field in the MongoDB collection.
+
+    :param papers_collection: MongoDB collection object for papers.
+    """
+
     papers_collection.update_one(
         {"reference_file_parsed": True},
         {"$set": {"reference_file_parsed": False}},
@@ -45,6 +57,14 @@ def reset_papers_collection(papers_collection):
 
 
 def lookup_dblp_id(collection, filename):
+    """
+    Looks up the DBLP id for a given filename in a MongoDB collection.
+
+    :param collection: MongoDB collection object for papers.
+    :param filename: Name of the file to look up.
+    :return: Tuple containing DBLP id and reference file parsed status.
+    """
+
     match_query = {"key_norm": f"{filename.split('.')[0]}"}
     result_dict = collection.find_one(match_query, collation={'locale': 'en', 'strength': 2})
     if result_dict is not None:
@@ -58,6 +78,14 @@ def lookup_dblp_id(collection, filename):
 
 
 def lookup_by_doi(collection, pub_doi):
+    """
+    Looks up a bibliographic entry using a DOI in a MongoDB collection.
+
+    :param collection: MongoDB collection object for papers.
+    :param pub_doi: DOI to look up.
+
+    :return: Resulting dictionary of the matched entry.
+    """
     match_query = {
         'ee': f'https://doi.org/{pub_doi}'
     }
@@ -66,6 +94,14 @@ def lookup_by_doi(collection, pub_doi):
 
 
 def lookup_by_title(collection, pub_title):
+    """
+    Looks up a bibliographic entry using a title in a MongoDB collection.
+
+    :param collection: MongoDB collection object for papers.
+    :param pub_title: Title to look up.
+
+    :return: Resulting dictionary of the matched entry or None if not found.
+    """
     if pub_title is not None:
 
         match_query = {
@@ -79,6 +115,14 @@ def lookup_by_title(collection, pub_title):
 
 
 def parse_biblstruct(collection, bib_entry):
+    """
+    Parses a bibliographic entry structure and retrieves relevant information.
+
+    :param collection: MongoDB collection object for papers.
+    :param bib_entry: Bibliographic entry structure to parse.
+
+    :return: Tuple containing extracted information, counters for various statistics.
+    """
 
     refs_checked = 0
     refs_skipped = 0
@@ -219,7 +263,14 @@ def parse_biblstruct(collection, bib_entry):
 
 
 def get_dblp_meta(collection, json_dict):
+    """
+    Retrieves DBLP metadata from a JSON dictionary.
 
+    :param collection: MongoDB collection object for papers.
+    :param json_dict: JSON dictionary containing bibliographic data.
+
+    :return: Tuple containing extracted DBLP metadata and counters for various statistics.
+    """
     bib_refs_checked = 0
     bib_refs_skipped = 0
     bib_dois_matched = 0
@@ -254,7 +305,17 @@ def get_dblp_meta(collection, json_dict):
 
 
 def iterate_json_reference_files(papers_collection, dataset_collection, stats_collection, json_path, stats):
+    """
+    Iterates through JSON reference files, processes data, and updates MongoDB collections.
 
+    :param papers_collection: MongoDB collection object for papers.
+    :param dataset_collection: MongoDB collection object for the dataset.
+    :param stats_collection: MongoDB collection object for statistics.
+    :param json_path: Path to the directory containing JSON reference files.
+    :param stats: Dictionary containing statistics counters.
+
+    :return: Updated statistics dictionary.
+    """
     for fl in os.scandir(json_path):
 
         bib_refs_checked = 0

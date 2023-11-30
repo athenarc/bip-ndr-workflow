@@ -15,6 +15,15 @@ logging.basicConfig(
 
 
 def get_file(url, path, headers):
+    """
+    Downloads a file from a given URL and saves it to the specified path.
+
+    :param url (str): The URL of the file to be downloaded.
+    :param path (str): The local path where the file will be saved.
+    :param headers (dict): HTTP headers to be included in the request.
+
+    :return: None
+    """
 
     # TODO: find way to write "LATEST_DATE" in .env
 
