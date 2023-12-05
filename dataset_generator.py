@@ -49,7 +49,7 @@ def reset_papers_collection(papers_collection):
     :param papers_collection: MongoDB collection object for papers.
     """
 
-    papers_collection.update_one(
+    papers_collection.update_many(
         {"reference_file_parsed": True},
         {"$set": {"reference_file_parsed": False}},
         collation={'locale': 'en', 'strength': 2}
@@ -68,13 +68,13 @@ def lookup_dblp_id(collection, filename):
     match_query = {"key_norm": f"{filename.split('.')[0]}"}
     result_dict = collection.find_one(match_query, collation={'locale': 'en', 'strength': 2})
     if result_dict is not None:
-        return result_dict['key'], result_dict['reference_file_parsed']
+        return result_dict['key'], result_dict['reference_file_parsed'], result_dict['ee']
     else:
         logging.info(f"DBLP id for file {filename.split('.')[0]} not found. Skipping...")
         logging.info("")
         logging.info("---------------------")
         logging.info("")
-        return None, None
+        return None, None, None
 
 
 def lookup_by_doi(collection, pub_doi):
@@ -328,7 +328,7 @@ def iterate_json_reference_files(papers_collection, dataset_collection, stats_co
             if fl.is_file():
                 bib_entries = []
 
-                dblp_id, file_checked = lookup_dblp_id(papers_collection, fl.name)
+                dblp_id, file_checked, dblp_url = lookup_dblp_id(papers_collection, fl.name)
 
                 if dblp_id is not None:
                     if file_checked is False:
@@ -338,12 +338,32 @@ def iterate_json_reference_files(papers_collection, dataset_collection, stats_co
                             json_dict = json.load(json_file)
                             bib_entries, bib_refs_checked, bib_refs_skipped, bib_dois_matched, bib_dois_dblp, bib_dblp_keys_matched = get_dblp_meta(papers_collection, json_dict)
 
-                        dblp_entry_dict = {
-                            "citing_paper": {
-                                "dblp_id": dblp_id,
-                            },
-                            "cited_papers": bib_entries
-                        }
+                        if dblp_url is not None:
+                            dblp_doi = [item for item in dblp_url if 'doi' in item]
+                            if len(dblp_doi) != 0:
+                                dblp_doi = dblp_doi[0].split('org/')[-1]
+                                dblp_entry_dict = {
+                                    "citing_paper": {
+                                        "dblp_id": dblp_id,
+                                        "doi": dblp_doi
+                                    },
+                                    "cited_papers": bib_entries
+                                }
+                            else:
+                                print(f"DBLP DOI IS EMPTY")
+                                dblp_entry_dict = {
+                                    "citing_paper": {
+                                        "dblp_id": dblp_id,
+                                    },
+                                    "cited_papers": bib_entries
+                                }
+                        else:
+                            dblp_entry_dict = {
+                                "citing_paper": {
+                                    "dblp_id": dblp_id,
+                                },
+                                "cited_papers": bib_entries
+                            }
 
                         stats['total_files_checked'] += 1
                         stats['total_refs_checked'] += bib_refs_checked
