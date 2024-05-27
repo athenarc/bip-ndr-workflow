@@ -43,6 +43,7 @@ if __name__ == "__main__":
             input_path=pdf_path,
             output=tei_path,
             consolidate_citations=True,
+            include_raw_citations=True,
             force=False,
             verbose=True,
             n=10)

@@ -153,12 +153,17 @@ if __name__ == "__main__":
 
     concat_values = ['author', 'author-orcid', 'cite', 'cite-label', 'ee', 'ee-type']
 
-    # create_download_object(pub_retriever_path, latest_date)
-    match_key_to_filename(pdf_path)
+    command = int(sys.argv[1])
 
-    # for input_file in csv_files:
-    #     input_dblp_file = pd.read_csv(os.path.join(corpus_path, input_file), sep=";", low_memory=False)
-    #     input_dblp_file = split_concat_cells(input_dblp_file, concat_values).replace(np.nan, '', regex=True)
-    #     # input_dblp_file = input_dblp_file.replace(np.nan, '', regex=True)
-
-    #     import_to_mongo(input_dblp_file)
+    if command == 0:
+        # if command is import-to-mongo
+        for input_file in csv_files:
+            input_dblp_file = pd.read_csv(os.path.join(corpus_path, input_file), sep=";", low_memory=False)
+            input_dblp_file = split_concat_cells(input_dblp_file, concat_values).replace(np.nan, '', regex=True)
+            import_to_mongo(input_dblp_file)
+    elif command == 1:
+        # if command is create-download-object
+        create_download_object(pub_retriever_path, latest_date)
+    elif command == 2:
+        # if command is match-key-to-filename
+        match_key_to_filename(pdf_path)
