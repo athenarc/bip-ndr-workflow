@@ -5,7 +5,7 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%d-%m-%Y %H:%M:%S',
     handlers=[
-        logging.FileHandler(os.path.join(get_keys()["logs_path"], f"{os.path.basename(__file__).replace('.py', '.log')}")),
+        logging.FileHandler(os.path.join(get_keys()["logs_path"], get_keys()["latest_date"], f"{os.path.basename(__file__).replace('.py', '.log')}")),
         logging.StreamHandler()
     ]
 )

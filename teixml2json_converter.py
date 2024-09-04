@@ -5,7 +5,7 @@ from utils.helper_utils import *
 
 load_dotenv()
 
-logs_path = get_keys()['logs_path']
+logs_path = os.path.join(get_keys()['logs_path'], get_keys()["latest_date"])
 json_path = os.path.join(get_keys()['json_path'], get_keys()['mode'])
 tei_path = os.path.join(get_keys()['tei_path'], get_keys()['mode'])
 
