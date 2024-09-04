@@ -23,6 +23,7 @@ def get_keys():
         "logs_path": os.getenv('LOGS_PATH'),
         "grobid_config_path": os.getenv('GROBID_CONFIG_PATH'),
         "pub_retriever_path": os.getenv('PUB_RETRIEVER_PATH'),
+        "mode": os.getenv('MODE'),
         "latest_date": os.getenv('LATEST_DATE')
     }
 

@@ -1,12 +1,11 @@
-from utils import *
-
+from utils.helper_utils import *
 
 logging.basicConfig(
     format='%(asctime)s \t %(message)s',
     level=logging.INFO,
     datefmt='%d-%m-%Y %H:%M:%S',
     handlers=[
-        logging.FileHandler(os.path.join("logs", f"{os.path.basename(__file__).replace('.py', '.log')}")),
+        logging.FileHandler(os.path.join(get_keys()["logs_path"], f"{os.path.basename(__file__).replace('.py', '.log')}")),
         logging.StreamHandler()
     ]
 )
@@ -31,7 +30,7 @@ def create_stats_collection():
 
     coll = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
-        collection_name=f"{get_keys()['stats']}_{dt.today().strftime('%d-%m-%Y')}",
+        collection_name=f"{get_keys()['stats']}_{get_keys()['latest_date']}",
         ip=get_keys()['mongo_ip'],
         username=get_keys()['mongo_user'],
         password=get_keys()['mongo_pass']
@@ -350,7 +349,7 @@ def iterate_json_reference_files(papers_collection, dataset_collection, stats_co
                                     "cited_papers": bib_entries
                                 }
                             else:
-                                print(f"DBLP DOI IS EMPTY")
+                                logging.info(f"DBLP DOI IS EMPTY")
                                 dblp_entry_dict = {
                                     "citing_paper": {
                                         "dblp_id": dblp_id,
@@ -411,12 +410,7 @@ def iterate_json_reference_files(papers_collection, dataset_collection, stats_co
 def main():
     load_dotenv()
 
-    # json_path = os.path.join(os.sep, "data", "dblp_corpus", "full_corpus", "json_references")
-    # json_path = os.path.join(os.sep, "home", "pkoloveas", "Desktop", "dblp_corpus", "full_corpus", "json_references")
-    # json_path = os.path.join("data")
-    json_path = get_keys()['json_path']
-
-    # dblp_dataset = []
+    json_path = os.path.join(get_keys()['json_path'], get_keys()['mode'])
 
     papers_collection = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
@@ -428,7 +422,7 @@ def main():
 
     dblp_dataset_collection = connect_to_mongo_collection(
         db_name=get_keys()['mongo_db'],
-        collection_name=f"{get_keys()['dblp_dataset']}_{dt.today().strftime('%d-%m-%Y')}",
+        collection_name=f"{get_keys()['dblp_dataset']}_{get_keys()['latest_date']}",
         ip=get_keys()['mongo_ip'],
         username=get_keys()['mongo_user'],
         password=get_keys()['mongo_pass']
@@ -437,7 +431,7 @@ def main():
     stats_collection = create_stats_collection()
 
     stats = stats_collection.find({"key": "statistics"})[0]
-    # print(stats[0])
+
     stats["total_files_checked"] = int(stats["total_files_checked"])
     stats["total_refs_checked"] = int(stats["total_refs_checked"])
     stats["total_refs_skipped"] = int(stats["total_refs_skipped"])

@@ -1,16 +1,13 @@
 import xmltodict
 import re
 import click
-from utils import *
+from utils.helper_utils import *
 
 load_dotenv()
 
-# tei_path = os.path.join("..", "data", "TEI_XML")  # Path to the directory containing the TEI XML files
-# json_path = os.path.join("..", "data", "JSON_References")  # Path to the directory where the JSON files will be saved
-# logs_path = os.path.join("..", "logs")  # Path to the directory where logs will be saved
 logs_path = get_keys()['logs_path']
-json_path = get_keys()['json_path']
-tei_path = get_keys()['tei_path']
+json_path = os.path.join(get_keys()['json_path'], get_keys()['mode'])
+tei_path = os.path.join(get_keys()['tei_path'], get_keys()['mode'])
 
 
 logging.basicConfig(
@@ -144,7 +141,7 @@ def main(ctx, in_path, out_path, yes):
 
         # Check if the input folder exists
         if not os.path.exists(in_path):
-            click.echo(f"The folder \"{in_path}\" does not exist. Please create it and add the TEI files to it.")
+            click.echo(f"The folder \"{in_path}\" does not exist. Please create it and add the TEI files in it.")
             exit(1)
         else:
             # Check if the input folder is empty
