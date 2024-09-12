@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     if not os.path.exists(latest_path):
         os.makedirs(latest_path)
-        os.makedirs(os.path.join(latest_path, 'DL-Object'))
+        os.makedirs(os.path.join(latest_path, 'DL_Object'))
 
         xml_url = url + latest_xml
         dtd_url = url + latest_dtd

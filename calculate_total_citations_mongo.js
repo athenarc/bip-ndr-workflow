@@ -35,4 +35,10 @@ query = db[dblp_dataset].aggregate([
   }
 ]);
 
-printjson(query);
+// Extract the total_count value from the aggregation result
+result = query.toArray(); // Convert the result to an array
+if (result.length > 0) {
+  print(`\n-----------------------------\nTotal citation count: ${result[0].total_count}\n-----------------------------\n`);
+} else {
+  print("No data found");
+}
