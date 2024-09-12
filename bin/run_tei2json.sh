@@ -28,7 +28,7 @@ done
 # Function to process a single batch
 process_batch() {
     local batch_number="$1"
-    python3 teixml2json_converter.py --in_path "${TEI_PATH}/${MODE}/DocFiles_${batch_number}/" --out_path "${JSON_PATH}/${MODE}/DocFiles_${batch_number}/" --yes
+    python3 src/teixml2json_converter.py --in_path "${TEI_PATH}/${MODE}/DocFiles_${batch_number}/" --out_path "${JSON_PATH}/${MODE}/DocFiles_${batch_number}/" --yes
     echo "Finished processing batch ${batch_number}"
 }
 

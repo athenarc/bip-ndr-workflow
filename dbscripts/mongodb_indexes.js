@@ -1,4 +1,5 @@
 use DBLP
+
 db.manuscript_metadata.createIndex({"import_date": 1}, {collation: {'locale': 'en', 'strength': 2}})
 db.manuscript_metadata.createIndex({"ee": 1}, {collation: {'locale': 'en', 'strength': 2}})
 db.manuscript_metadata.createIndex({"ee-type": 1}, {collation: {'locale': 'en', 'strength': 2}})
