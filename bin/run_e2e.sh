@@ -17,7 +17,7 @@ echo "Make Directories (with latest release date) - DONE"
 
 gunzip -k ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-${LATEST_DATE}.xml.gz
 
-python3 ./submodules/dblp-to-csv/XMLToCSV.py ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-${LATEST_DATE}.xml ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-*.dtd ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp_${LATEST_DATE}.csv
+python3 ./src/submodules/dblp-to-csv/XMLToCSV.py ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-${LATEST_DATE}.xml ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-*.dtd ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp_${LATEST_DATE}.csv
 echo "DBLP to CSV - DONE"
 
 python3 ./src/metadata_extractor.py 0  # import_to_mongo
@@ -32,8 +32,8 @@ echo "Create Download Object - DONE"
 echo "Publication Retriever - DONE"
 
 mv ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/output/DocFiles_* ${PDF_PATH}
-python3 ./src/grobid_pdf2tei.py 1 DocFiles_000  # TODO: Make option for batch numbers and all batches like teixml2json_converter
-echo "GROBID PDF2TEI Batch 000 - DONE"
+python3 ./src/grobid_pdf2tei.py 1 --batch all --config 1
+echo "GROBID PDF2TEI - DONE"
 
 ./bin/run_tei2json.sh --all  # executes -> python3 ./src/teixml2json_converter.py
 echo "TEI2JSON - DONE"

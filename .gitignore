@@ -172,3 +172,7 @@ output_dataset/
 logs/
 
 submodules/
+
+
+seq_ex.sh
+nohup.out
