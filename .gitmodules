@@ -3,7 +3,7 @@
 	url = https://github.com/ThomHurks/dblp-to-csv
 [submodule "src/submodules/grobid_client_python"]
 	path = src/submodules/grobid_client_python
-	url = git@github.com:kermitt2/grobid_client_python.git
+	url = https://github.com/kermitt2/grobid_client_python
 [submodule "src/submodules/PublicationsRetriever"]
 	path = src/submodules/PublicationsRetriever
-	url = https://github.com/LSmyrnaios/PublicationsRetriever.git
+	url = https://github.com/LSmyrnaios/PublicationsRetriever
