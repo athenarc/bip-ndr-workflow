@@ -1,7 +1,0 @@
-*.csv
-.idea/
-.DS_Store
-dblp.dtd
-dblp.xml
-*.sh
-venv/
