@@ -57,35 +57,41 @@ if __name__ == "__main__":
     load_dotenv()
 
     corpus_path = get_keys()['corpus_path']
-    url = "https://dblp.org/xml/release/"
+    release_url = "https://drops.dagstuhl.de/entities/collection/10.4230/dblp.xml"
+    artifact_base_url = "https://drops.dagstuhl.de/entities/artifact/10.4230/"
+    storage_base_url = "https://drops.dagstuhl.de/storage/artifacts/dblp/xml/"
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36"
     }
 
-    response = requests.get(url, headers=headers, timeout=4)
+    response = requests.get(release_url, headers=headers, timeout=4)
 
     soup = BeautifulSoup(response.text, 'html.parser')
     links = str(soup.find_all('a', href=True))
 
-    latest_xml = re.findall(r'dblp-\d+-\d+-\d+\.xml\.gz', links)[0]
-    latest_dtd = re.findall(r'dblp-\d+-\d+-\d+\.dtd', links)[0]
+    print(links)
 
-    xml_url = url + latest_xml
-    dtd_url = url + latest_dtd
+    latest_artifact = re.findall(r'dblp\.xml\.\d+-\d+-\d+', links)[0]
+    latest_date = re.findall(r'\d+-\d+-\d+', latest_artifact)[0]
+    artifact_year = latest_date.split('-')[0]
 
-    latest_path = os.path.join(corpus_path, latest_xml.split('.')[0])
-    latest_date = re.findall(r'\d+-\d+-\d+', latest_xml)[0]
+    print(latest_artifact)
+    
+    artifact_url = f"{artifact_base_url}{latest_artifact}"
+    print(artifact_url)
+
+    local_xml = f"dblp-{latest_date}.xml.gz"
+    storage_url = f"{storage_base_url}{artifact_year}/{local_xml}"
+    print(storage_url)
+
+    latest_path = os.path.join(corpus_path, f"dblp-{latest_date}")
 
     if not os.path.exists(latest_path):
         os.makedirs(latest_path)
         os.makedirs(os.path.join(latest_path, 'DL_Object'))
 
-        xml_url = url + latest_xml
-        dtd_url = url + latest_dtd
-
-        get_file(xml_url, os.path.join(latest_path, latest_xml), headers)
-        get_file(dtd_url, os.path.join(latest_path, latest_dtd), headers)
+        get_file(storage_url, os.path.join(latest_path, local_xml), headers)
 
         # Update the LATEST_DATE in .env file
         update_latest_date_in_env(latest_date)
