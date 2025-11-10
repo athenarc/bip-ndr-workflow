@@ -1,6 +1,6 @@
 # BIP! NDR Workflow
 
-[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg)](https://arxiv.org/abs/2307.12794) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7962019.svg)](https://doi.org/10.5281/zenodo.7962019) [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![arXiv](https://img.shields.io/badge/arXiv-2307.12794-b31b1b.svg)](https://arxiv.org/abs/2307.12794) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7962019.svg)](https://doi.org/10.5281/zenodo.7962019) [![License: GPL v2](https://img.shields.io/badge/License-GPL_v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
 ![Workflow](/img/dataset-creation-workflow.png)
 
