@@ -18,6 +18,10 @@ To excecute the end-to-end workflow run:
 ./bin/run_e2e.sh
 ```
 
+## License
+
+Released under [GNU GPL v2.0](LICENSE).
+
 ## Who do I talk to?
 
 This repository is maintained by **Paris Koloveas** from Athena RC
