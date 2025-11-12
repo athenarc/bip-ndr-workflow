@@ -20,6 +20,24 @@ The resulting dataset enriches scientific publication graphs by capturing citati
 - **MongoDB integration**: Efficient storage and querying of intermediate and final data
 - **Comprehensive logging**: Per-stage logs with timestamps for debugging and monitoring
 
+### Extended Workflow: Citation Intent Classification
+
+The repository includes an **extended workflow** in the `intents_workflow/` directory that builds upon the core pipeline to add **citation intent classification**. This extended workflow:
+
+- Operates independently but expects TEI XML files from the core pipeline's Stage 6 (Grobid processing)
+- Extracts citation contexts (surrounding text) from full-text papers
+- Classifies citations into intent categories (Background, Methods, Results Comparison, etc.)
+- Produces richer dataset entries with citation contexts and semantic intent labels
+- Uses an S2ORC-compatible JSON format for better interoperability
+
+**When to use the intents workflow:**
+
+- If you need citation contexts and semantic intent classifications for research on citation behavior
+- If you want S2ORC-format output for compatibility with other citation analysis tools
+- If you're building datasets for citation intent prediction models
+
+**Note:** The intents workflow is a separate, related project and does not modify the core BIP! NDR pipeline. See [`intents_workflow/README.md`](intents_workflow/README.md) for detailed documentation on this extended functionality.
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
