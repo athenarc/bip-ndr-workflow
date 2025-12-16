@@ -17,6 +17,8 @@ echo "Make Directories (with latest release date) - DONE"
 
 gunzip -k ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-${LATEST_DATE}.xml.gz
 
+cp ${DBLP_CORPUS_PATH}/DTD/dblp-*.dtd ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/
+
 python3 ./src/submodules/dblp-to-csv/XMLToCSV.py ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-${LATEST_DATE}.xml ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp-*.dtd ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/dblp_${LATEST_DATE}.csv
 echo "DBLP to CSV - DONE"
 
@@ -32,7 +34,7 @@ echo "Create Download Object - DONE"
 echo "Publication Retriever - DONE"
 
 mv ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/output/DocFiles_* ${PDF_PATH}
-python3 ./src/grobid_pdf2tei.py 1 --batch all --config 1
+python3 ./src/grobid_pdf2tei.py 1 --batch all # --config 1
 echo "GROBID PDF2TEI - DONE"
 
 ./bin/run_tei2json.sh --all  # executes -> python3 ./src/teixml2json_converter.py

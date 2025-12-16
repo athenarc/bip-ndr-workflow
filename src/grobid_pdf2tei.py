@@ -32,7 +32,7 @@ def run_grobid_service(service, pdf_path, tei_path, service_options, client):
             consolidate_header=False,
             force=False,
             verbose=True,
-            n=50)
+            n=8)
     elif service == 1:  # processReferences
         print(f"running service {service} with input: {pdf_path} and output: {tei_path}")
 
@@ -45,7 +45,7 @@ def run_grobid_service(service, pdf_path, tei_path, service_options, client):
             include_raw_citations=True,
             force=False,
             verbose=True,
-            n=50)
+            n=8)
     elif service == 2:  # processHeader
         print(f"running service {service} with input: {pdf_path} and output: {tei_path}")
 
@@ -57,7 +57,7 @@ def run_grobid_service(service, pdf_path, tei_path, service_options, client):
             include_raw_affiliations=1,
             force=False,
             verbose=True,
-            n=50)
+            n=8)
     elif service == 3:  # processFulltextDocument
         print(f"running service {service} with input: {pdf_path} and output: {tei_path}")
 
@@ -71,7 +71,7 @@ def run_grobid_service(service, pdf_path, tei_path, service_options, client):
             force=False,
             segment_sentences=True,
             verbose=True,
-            n=50)
+            n=8)
 
 
 @click.command()
@@ -121,17 +121,17 @@ if __name__ == "__main__":
     pdf_path = get_keys()['pdf_path']
     tei_path = os.path.join(get_keys()['tei_path'], get_keys()['mode'])
 
-    service_options = ["processFulltextDocument", "processReferences", "processHeaderDocument"]
+    service_options = ["processFulltextDocument", "processReferences", "processHeaderDocument", "processFulltextDocumentSegmented"]
 
     # Parse arguments and get the service and batch_dirs from CLI
     service, batch_dirs, client = get_user_arguments(standalone_mode=False)  # Use standalone_mode=False to avoid automatic exit after click
     # print(service, batch_dirs)
     logging.info(f"Using PDF path: {pdf_path}")
     logging.info(f"Using TEI path: {tei_path}")
-    logging.info(f"Selected service: {service_options[service-1]}")
+    logging.info(f"Selected service: {service_options[service]}")
     print(f"Using PDF path: {pdf_path}")
     print(f"Using TEI path: {tei_path}")
-    print(f"Selected service: {service_options[service-1]}")
+    print(f"Selected service: {service_options[service]}")
     
     if not os.path.exists(tei_path):
         os.makedirs(tei_path)

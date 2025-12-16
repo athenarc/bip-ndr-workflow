@@ -31,7 +31,7 @@ done
 # Function to process a single batch
 process_batch() {
     local batch_number="$1"
-    local command="java -jar publications_retriever-1.3-SNAPSHOT.jar -retrieveDataType document -downloadDocFiles -docFileNameType idName -firstDocFileNum 1 -docFilesStorage ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/output/DocFiles_${batch_number} < ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/input/input_batches/urls_batch_${batch_number}.jsonl > ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/output/urls_batch_${batch_number}_output.jsonl"
+    local command="java -jar publications_retriever-1.3-SNAPSHOT.jar -retrieveDataType document -downloadDocFiles -fileNameType idName -firstFileNum 1 -docFilesStorage ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/output/DocFiles_${batch_number} < ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/input/input_batches/urls_batch_${batch_number}.jsonl > ${DBLP_CORPUS_PATH}/dblp-${LATEST_DATE}/DL_Object/output/urls_batch_${batch_number}_output.jsonl"
     echo -e "\nRunning: $command\n"
     
     eval "$command"
